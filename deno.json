@@ -5,7 +5,9 @@
   },
   "imports": {
     "hono": "jsr:@hono/hono@^4",
-    "hono/": "jsr:@hono/hono@^4/"
+    "hono/": "jsr:@hono/hono@^4/",
+    "hono/html": "jsr:@hono/hono@^4/html",
+    "hono/utils/html": "jsr:@hono/hono@^4/utils/html"
   },
   "compilerOptions": {
     "jsx": "react-jsx",
