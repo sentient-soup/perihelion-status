@@ -1,0 +1,15 @@
+services:
+  status:
+    image: ghcr.io/sentient-soup/perihelion-status:latest
+    build: .
+    container_name: perihelion-status
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - status-data:/data
+    environment:
+      - DENO_KV_PATH=/data/status.db
+
+volumes:
+  status-data:

@@ -4,7 +4,8 @@ import { createApp } from "./src/routes.ts";
 import { startScheduler } from "./src/scheduler.ts";
 import { PORT } from "./src/config.ts";
 
-const kv = await Deno.openKv();
+const kvPath = Deno.env.get("DENO_KV_PATH") ?? undefined;
+const kv = await Deno.openKv(kvPath);
 
 // Start background health checks
 startScheduler(kv);
