@@ -1,0 +1,181 @@
+/* static/style.css */
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text-muted: #8b949e;
+  --green: #3fb950;
+  --yellow: #d29922;
+  --red: #f85149;
+  --green-bg: #0d2818;
+  --yellow-bg: #2d2000;
+  --red-bg: #2d0000;
+  --nodata: #30363d;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* -- Header -------------------------------- */
+.page-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.page-header h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.overall-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.status-up   { background: var(--green-bg); color: var(--green); }
+.status-degraded { background: var(--yellow-bg); color: var(--yellow); }
+.status-down { background: var(--red-bg); color: var(--red); }
+.status-nodata { background: var(--surface); color: var(--text-muted); }
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.overall-uptime {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.nines {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.uptime-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* -- Service Rows -------------------------- */
+.services {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.service-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.service-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.service-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+}
+
+.badge-up   { background: var(--green-bg); color: var(--green); }
+.badge-degraded { background: var(--yellow-bg); color: var(--yellow); }
+.badge-down { background: var(--red-bg); color: var(--red); }
+.badge-nodata { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); }
+
+/* -- Bar Strip ----------------------------- */
+.bar-strip {
+  display: flex;
+  gap: 2px;
+  height: 34px;
+  align-items: stretch;
+}
+
+.bar {
+  flex: 1;
+  border-radius: 3px;
+  transition: opacity 0.15s;
+  cursor: default;
+}
+
+.bar:hover {
+  opacity: 0.75;
+}
+
+.bar-up       { background: var(--green); }
+.bar-degraded { background: var(--yellow); }
+.bar-down     { background: var(--red); }
+.bar-nodata   { background: var(--nodata); }
+
+.bar-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.35rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* -- Footer -------------------------------- */
+footer {
+  text-align: center;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+/* -- Responsive ---------------------------- */
+@media (max-width: 640px) {
+  .container { padding: 1rem; }
+  .bar-strip { height: 28px; }
+  .service-row { padding: 1rem; }
+}
