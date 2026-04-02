@@ -1,5 +1,5 @@
 // src/scheduler.ts
-import { services, CHECK_INTERVAL_MS } from "./config.ts";
+import { CHECK_INTERVAL_MS, services } from "./config.ts";
 import { checkService } from "./checker.ts";
 import { recordCheck } from "./store.ts";
 
@@ -28,7 +28,9 @@ export async function runChecks(kv: Deno.Kv): Promise<void> {
 /** Start the background check loop */
 export function startScheduler(kv: Deno.Kv): void {
   console.log(
-    `Scheduler started: checking ${services.length} services every ${CHECK_INTERVAL_MS / 1000}s`,
+    `Scheduler started: checking ${services.length} services every ${
+      CHECK_INTERVAL_MS / 1000
+    }s`,
   );
 
   // Run immediately on start

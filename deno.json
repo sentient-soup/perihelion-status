@@ -7,7 +7,8 @@
     "hono": "jsr:@hono/hono@^4",
     "hono/": "jsr:@hono/hono@^4/",
     "hono/html": "jsr:@hono/hono@^4/html",
-    "hono/utils/html": "jsr:@hono/hono@^4/utils/html"
+    "hono/utils/html": "jsr:@hono/hono@^4/utils/html",
+    "hono/deno": "jsr:@hono/hono@^4/deno"
   },
   "compilerOptions": {
     "jsx": "react-jsx",

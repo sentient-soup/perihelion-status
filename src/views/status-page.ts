@@ -13,7 +13,9 @@ export interface ServiceData {
   uptime: number;
 }
 
-export function statusPage(servicesData: ServiceData[]): HtmlEscapedString | Promise<HtmlEscapedString> {
+export function statusPage(
+  servicesData: ServiceData[],
+): HtmlEscapedString | Promise<HtmlEscapedString> {
   // Global uptime: average across all services
   const allHistory = servicesData.flatMap((s) => s.history);
   const globalUptime = computeOverallUptime(allHistory);
@@ -25,27 +27,36 @@ export function statusPage(servicesData: ServiceData[]): HtmlEscapedString | Pro
 
   return layout(
     "Perihelion Status",
-    html`<div class="container">
-  ${pageHeader(globalUptime, ninesStr)}
-  <main
-    class="services"
-    hx-get="/partials/services"
-    hx-trigger="every 30s"
-    hx-swap="innerHTML"
-  >
-    ${rows}
-  </main>
-  <footer>
-    <p>Monitored from Aphelion &bull; Checks every 60s &bull; Showing last 90 days</p>
-  </footer>
-</div>`,
+    html`
+      <div class="container">
+        ${pageHeader(globalUptime, ninesStr)}
+        <main
+          class="services"
+          hx-get="/partials/services"
+          hx-trigger="every 30s"
+          hx-swap="innerHTML"
+        >
+          ${rows}
+        </main>
+        <footer>
+          <p>
+            Monitored from Aphelion &bull; Checks every 60s &bull; Showing last 90
+            days
+          </p>
+        </footer>
+      </div>
+    `,
   );
 }
 
 /** Partial: just the service rows (for htmx polling) */
-export function servicesPartial(servicesData: ServiceData[]): HtmlEscapedString | Promise<HtmlEscapedString> {
+export function servicesPartial(
+  servicesData: ServiceData[],
+): HtmlEscapedString | Promise<HtmlEscapedString> {
   const rows = servicesData.map((s) =>
     serviceRow(s.config.name, s.history, s.uptime)
   );
-  return html`${rows}`;
+  return html`
+    ${rows}
+  `;
 }

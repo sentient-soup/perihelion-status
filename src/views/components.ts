@@ -19,16 +19,22 @@ export function uptimeBadgeClass(uptimePercent: number): string {
 }
 
 /** Render the 90-day bar strip for a service */
-export function barStrip(history: DayStats[]): HtmlEscapedString | Promise<HtmlEscapedString> {
+export function barStrip(
+  history: DayStats[],
+): HtmlEscapedString | Promise<HtmlEscapedString> {
   const bars = history.map((d) => {
     const cls = barColor(d.uptimePercent);
     const title = d.total === 0
       ? `${d.day}: No data`
-      : `${d.day}: ${d.uptimePercent.toFixed(2)}% uptime (${d.ok}/${d.total} checks)`;
+      : `${d.day}: ${
+        d.uptimePercent.toFixed(2)
+      }% uptime (${d.ok}/${d.total} checks)`;
     return `<div class="bar ${cls}" title="${title}"></div>`;
   }).join("");
 
-  return html`<div class="bar-strip">${raw(bars)}</div>`;
+  return html`
+    <div class="bar-strip">${raw(bars)}</div>
+  `;
 }
 
 /** Render a single service row */
@@ -44,17 +50,19 @@ export function serviceRow(
     ? "No data"
     : `${overallUptime.toFixed(3)}%`;
 
-  return html`<div class="service-row">
-  <div class="service-header">
-    <span class="service-name">${name}</span>
-    <span class="badge ${badgeCls}">${badgeText}</span>
-  </div>
-  ${barStrip(history)}
-  <div class="bar-labels">
-    <span>${history[0]?.day ?? ""}</span>
-    <span>Today</span>
-  </div>
-</div>`;
+  return html`
+    <div class="service-row">
+      <div class="service-header">
+        <span class="service-name">${name}</span>
+        <span class="badge ${badgeCls}">${badgeText}</span>
+      </div>
+      ${barStrip(history)}
+      <div class="bar-labels">
+        <span>${history[0]?.day ?? ""}</span>
+        <span>Today</span>
+      </div>
+    </div>
+  `;
 }
 
 /** Render the page header with overall uptime */
@@ -65,28 +73,30 @@ export function pageHeader(
   const statusText = overallUptime >= 99
     ? "All Systems Operational"
     : overallUptime >= 90
-      ? "Degraded Performance"
-      : overallUptime > 0
-        ? "Major Outage"
-        : "No Data Yet";
+    ? "Degraded Performance"
+    : overallUptime > 0
+    ? "Major Outage"
+    : "No Data Yet";
 
   const statusCls = overallUptime >= 99
     ? "status-up"
     : overallUptime >= 90
-      ? "status-degraded"
-      : overallUptime > 0
-        ? "status-down"
-        : "status-nodata";
+    ? "status-degraded"
+    : overallUptime > 0
+    ? "status-down"
+    : "status-nodata";
 
-  return html`<header class="page-header">
-  <h1>Perihelion Status</h1>
-  <div class="overall-status ${statusCls}">
-    <span class="status-dot"></span>
-    <span>${statusText}</span>
-  </div>
-  <div class="overall-uptime">
-    <span class="nines">${ninesStr}</span>
-    <span class="uptime-label">over the last 90 days</span>
-  </div>
-</header>`;
+  return html`
+    <header class="page-header">
+      <h1>Perihelion Status</h1>
+      <div class="overall-status ${statusCls}">
+        <span class="status-dot"></span>
+        <span>${statusText}</span>
+      </div>
+      <div class="overall-uptime">
+        <span class="nines">${ninesStr}</span>
+        <span class="uptime-label">over the last 90 days</span>
+      </div>
+    </header>
+  `;
 }

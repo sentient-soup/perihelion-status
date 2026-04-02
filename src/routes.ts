@@ -1,8 +1,8 @@
 // src/routes.ts
 import { Hono } from "hono";
 import { services } from "./config.ts";
-import { getServiceHistory, computeOverallUptime } from "./store.ts";
-import { statusPage, servicesPartial } from "./views/status-page.ts";
+import { computeOverallUptime, getServiceHistory } from "./store.ts";
+import { servicesPartial, statusPage } from "./views/status-page.ts";
 import type { ServiceData } from "./views/status-page.ts";
 
 export function createApp(kv: Deno.Kv): Hono {
