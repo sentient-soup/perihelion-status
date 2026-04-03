@@ -1,0 +1,13 @@
+[
+  {
+    "id": "my-app",
+    "name": "My App",
+    "url": "http://myserver:8080/health"
+  },
+  {
+    "id": "my-api",
+    "name": "My API",
+    "url": "http://myserver:3000/healthcheck",
+    "expectedStatus": 200
+  }
+]

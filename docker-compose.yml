@@ -8,8 +8,10 @@ services:
       - "3000:3000"
     volumes:
       - status-data:/data
+      - ./services.json:/config/services.json:ro
     environment:
       - DENO_KV_PATH=/data/status.db
+      - SERVICES_FILE=/config/services.json
 
 volumes:
   status-data:

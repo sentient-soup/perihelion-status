@@ -9,39 +9,41 @@ export interface ServiceConfig {
   expectedStatus?: number;
 }
 
-export const services: ServiceConfig[] = [
-  {
-    id: "jellyfin",
-    name: "Jellyfin",
-    url: "http://perihelion:8096/health",
-  },
-  {
-    id: "audiobookshelf",
-    name: "Audiobookshelf",
-    url: "http://perihelion:13378/healthcheck",
-  },
-  {
-    id: "home-assistant",
-    name: "Home Assistant",
-    url: "http://perihelion:8123/api/",
-  },
-  {
-    id: "nextcloud",
-    name: "Nextcloud",
-    url: "http://perihelion:8080/status.php",
-  },
-  {
-    id: "vaultwarden",
-    name: "Vaultwarden",
-    url: "http://perihelion:8222/alive",
-  },
-];
+function loadServices(): ServiceConfig[] {
+  const path = Deno.env.get("SERVICES_FILE");
+  if (!path) {
+    console.error(
+      "SERVICES_FILE environment variable is not set.\n" +
+        "Set it to the path of a JSON file defining your services.\n" +
+        "See services.example.json for the expected format.",
+    );
+    Deno.exit(1);
+  }
+
+  try {
+    const json = Deno.readTextFileSync(path);
+    const parsed = JSON.parse(json) as ServiceConfig[];
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      console.error(`${path} must contain a non-empty array of services.`);
+      Deno.exit(1);
+    }
+    console.log(`Loaded ${parsed.length} services from ${path}`);
+    return parsed;
+  } catch (e) {
+    console.error(`Failed to load services from ${path}:`, e);
+    Deno.exit(1);
+  }
+}
+
+export const services: ServiceConfig[] = loadServices();
 
 /** How often to check each service (ms) */
-export const CHECK_INTERVAL_MS = 60_000;
+export const CHECK_INTERVAL_MS = Number(
+  Deno.env.get("CHECK_INTERVAL_MS") ?? 60_000,
+);
 
 /** How many days of history to display */
-export const HISTORY_DAYS = 90;
+export const HISTORY_DAYS = Number(Deno.env.get("HISTORY_DAYS") ?? 90);
 
 /** Port the status page listens on */
-export const PORT = 3000;
+export const PORT = Number(Deno.env.get("PORT") ?? 3000);

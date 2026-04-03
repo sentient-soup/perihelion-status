@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "dev": "deno run --watch --unstable-kv --allow-net --allow-read --allow-env --allow-write main.ts",
+    "dev": "SERVICES_FILE=services.json deno run --watch --unstable-kv --allow-net --allow-read --allow-env --allow-write main.ts",
     "start": "deno run --unstable-kv --allow-net --allow-read --allow-env --allow-write main.ts"
   },
   "imports": {
