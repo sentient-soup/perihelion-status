@@ -18,19 +18,29 @@ export function uptimeBadgeClass(uptimePercent: number): string {
   return "badge-down";
 }
 
+/** Format a date string nicely: "2026-04-02" → "Apr 2" */
+function shortDate(day: string): string {
+  const d = new Date(day + "T00:00:00");
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 /** Render the 90-day bar strip for a service */
 export function barStrip(
   history: DayStats[],
 ): HtmlEscapedString | Promise<HtmlEscapedString> {
-  const bars = history.map((d) => {
-    const cls = barColor(d.uptimePercent);
-    const title = d.total === 0
-      ? `${d.day}: No data`
-      : `${d.day}: ${
-        d.uptimePercent.toFixed(2)
-      }% uptime (${d.ok}/${d.total} checks)`;
-    return `<div class="bar ${cls}" title="${title}"></div>`;
-  }).join("");
+  const bars = history
+    .map((d) => {
+      const cls = barColor(d.uptimePercent);
+      const dateLabel = shortDate(d.day);
+
+      if (d.total === 0) {
+        return `<div class="bar ${cls}" data-tooltip="${dateLabel}&#10;No data"></div>`;
+      }
+
+      const pct = d.uptimePercent.toFixed(2);
+      return `<div class="bar ${cls}" data-tooltip="${dateLabel}&#10;${pct}% uptime&#10;${d.ok}/${d.total} checks passed"></div>`;
+    })
+    .join("");
 
   return html`
     <div class="bar-strip">${raw(bars)}</div>
@@ -65,37 +75,67 @@ export function serviceRow(
   `;
 }
 
+/** Pick a fun status message and class based on uptime */
+function statusInfo(uptimePercent: number): {
+  text: string;
+  cls: string;
+} {
+  if (uptimePercent >= 99) {
+    return { text: "All Systems Operational", cls: "status-up" };
+  }
+  if (uptimePercent >= 90) {
+    return { text: "Mostly Operational, Mostly", cls: "status-degraded" };
+  }
+  if (uptimePercent > 0) {
+    return { text: "This Is Fine", cls: "status-down" };
+  }
+  return { text: "Waiting for Data...", cls: "status-nodata" };
+}
+
 /** Render the page header with overall uptime */
 export function pageHeader(
-  overallUptime: number,
-  ninesStr: string,
+  uptimePercent: number,
+  ninesCount: number,
+  ninesGrade: string,
 ): HtmlEscapedString | Promise<HtmlEscapedString> {
-  const statusText = overallUptime >= 99
-    ? "All Systems Operational"
-    : overallUptime >= 90
-    ? "Degraded Performance"
-    : overallUptime > 0
-    ? "Major Outage"
-    : "No Data Yet";
-
-  const statusCls = overallUptime >= 99
-    ? "status-up"
-    : overallUptime >= 90
-    ? "status-degraded"
-    : overallUptime > 0
-    ? "status-down"
-    : "status-nodata";
+  const { text: statusText, cls: statusCls } = statusInfo(uptimePercent);
+  const ninesDisplay = isFinite(ninesCount)
+    ? (Math.floor(ninesCount * 10) / 10).toFixed(1)
+    : "> 9000";
+  const uptimeDisplay = uptimePercent > 0
+    ? `${uptimePercent.toFixed(4)}%`
+    : "\u2014";
 
   return html`
     <header class="page-header">
-      <h1>Perihelion Status</h1>
-      <div class="overall-status ${statusCls}">
-        <span class="status-dot"></span>
-        <span>${statusText}</span>
-      </div>
-      <div class="overall-uptime">
-        <span class="nines">${ninesStr}</span>
-        <span class="uptime-label">over the last 90 days</span>
+      <div class="header-bg">
+        <div class="header-content">
+          <h1 class="site-title">Perihelion Status</h1>
+          <p class="subtitle">homelab uptime, measured with questionable rigor</p>
+
+          <div class="hero-stats">
+            <div class="stat-block nines-block">
+              <span class="stat-value">${ninesDisplay}</span>
+              <span class="stat-label">nines</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-block">
+              <span class="stat-value stat-uptime">${uptimeDisplay}</span>
+              <span class="stat-label">uptime</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-block">
+              <span class="stat-value stat-grade">${ninesGrade ||
+                "\u2014"}</span>
+              <span class="stat-label">grade</span>
+            </div>
+          </div>
+
+          <div class="overall-status ${statusCls}">
+            <span class="status-dot"></span>
+            <span>${statusText}</span>
+          </div>
+        </div>
       </div>
     </header>
   `;

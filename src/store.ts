@@ -78,14 +78,21 @@ export function computeOverallUptime(history: DayStats[]): number {
   return (totalOk / totalChecks) * 100;
 }
 
-/** Format uptime as "X nines" string — e.g. 99.95% → "3 nines (99.95%)" */
-export function formatNines(uptimePercent: number): string {
-  if (uptimePercent === 0) return "No data";
-  if (uptimePercent === 100) return "100% (infinite nines)";
+/** Count the number of nines in an uptime percentage */
+export function countNines(uptimePercent: number): number {
+  if (uptimePercent <= 0) return 0;
+  if (uptimePercent >= 100) return Infinity;
+  return -Math.log10(1 - uptimePercent / 100);
+}
 
-  // Count how many 9s: 99.999% = 5 nines
-  const nines = -Math.log10(1 - uptimePercent / 100);
-  const rounded = Math.floor(nines * 10) / 10;
-
-  return `${rounded.toFixed(1)} nines (${uptimePercent.toFixed(4)}%)`;
+/** Get a fun flavor label for the nines count */
+export function ninesLabel(nines: number): string {
+  if (!isFinite(nines)) return "S";
+  if (nines <= 0) return "";
+  if (nines >= 5) return "carrier-grade";
+  if (nines >= 4) return "enterprise-grade";
+  if (nines >= 3) return "production-grade";
+  if (nines >= 2) return "startup-grade";
+  if (nines >= 1) return "hobby-grade";
+  return "vibes-based";
 }
