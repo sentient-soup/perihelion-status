@@ -1,2 +1,5 @@
 # Deno
 .deno/
+
+# Local config
+services.json
