@@ -64,10 +64,10 @@ export function barStrip(
 export function masthead(): HtmlEscapedString | Promise<HtmlEscapedString> {
   return html`
     <header class="masthead">
-      <div class="kicker">The Perihelion</div>
-      <h1>Status Almanac</h1>
+      <div class="kicker">Perihelion</div>
+      <h1>System Status</h1>
       <div class="dateline">
-        Homelab dispatches, measured with questionable rigor
+        Homelab service monitoring
       </div>
     </header>
   `;
@@ -77,19 +77,16 @@ export function masthead(): HtmlEscapedString | Promise<HtmlEscapedString> {
 function lede(
   servicesData: ServiceData[],
 ): HtmlEscapedString | Promise<HtmlEscapedString> {
-  const total = servicesData.length;
-  const up = servicesData.filter((s) => s.live?.ok).length;
-  const troubled = servicesData
+  const down = servicesData
     .filter((s) => !s.live?.ok)
     .map((s) => s.config.name);
-  const allUp = up === total;
+  const allUp = down.length === 0;
 
-  const markText = allUp ? "Reporting live" : "Reporting an issue";
+  const markText = allUp ? "Operational" : "Service disruption";
   const sentence = allUp
-    ? html`Everything is online. Quiet on the homelab front.`
-    : html`${up} of ${total} are humming along, but
-        <em>${joinNames(troubled)}</em>
-        ${troubled.length > 1 ? "are" : "is"} having a moment.`;
+    ? html`All systems operational.`
+    : html`<em>${joinNames(down)}</em>
+        ${down.length > 1 ? "are" : "is"} currently down.`;
 
   return html`
     <div class="lede ${allUp ? "" : "warn"}">
@@ -109,9 +106,9 @@ function fieldNotes(
     : "—";
   return html`
     <div class="notes">
-      <div class="n"><b>${uptimeText}</b>uptime, 90 days</div>
-      <div class="n"><b>${ninesDisplay}</b>nines earned</div>
-      <div class="n"><b>60s</b>between checks</div>
+      <div class="n"><b>${uptimeText}</b>90-day uptime</div>
+      <div class="n"><b>${ninesDisplay}</b>nines</div>
+      <div class="n"><b>60s</b>check interval</div>
     </div>
   `;
 }
@@ -159,7 +156,7 @@ export function liveRegion(
     ${lede(servicesData)}
     ${fieldNotes(globalUptime, ninesDisplay)}
     <section class="index">
-      <h2>The Services, in order of appearance</h2>
+      <h2>Monitored Services</h2>
       ${servicesData.map((s) => entry(s))}
     </section>
   `;

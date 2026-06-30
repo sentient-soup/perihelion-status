@@ -40,8 +40,9 @@ export function statusPage(
           ${liveRegion(servicesData, globalUptime, ninesDisplay(globalUptime))}
         </main>
         <div class="colophon">
-          "Five nines" is a goal, not a promise.
-          <div class="small">Filed from Aphelion · last 90 days</div>
+          <div class="small">
+            Monitored from Aphelion · checks every 60s · last 90 days
+          </div>
         </div>
       </div>
     `,
