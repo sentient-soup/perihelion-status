@@ -9,6 +9,37 @@ export interface DayStats {
   uptimePercent: number;
 }
 
+/** The most recent check result for a service — drives the "right now" status. */
+export interface LiveStatus {
+  ok: boolean;
+  statusCode: number | null;
+  latencyMs: number;
+  timestamp: number;
+}
+
+/** Persist the latest check result so the page can show current up/down state. */
+export async function recordLive(
+  kv: Deno.Kv,
+  result: CheckResult,
+): Promise<void> {
+  const live: LiveStatus = {
+    ok: result.ok,
+    statusCode: result.statusCode,
+    latencyMs: result.latencyMs,
+    timestamp: result.timestamp,
+  };
+  await kv.set(["live", result.serviceId], live);
+}
+
+/** Read the latest check result, or null if the service has never been checked. */
+export async function getLiveStatus(
+  kv: Deno.Kv,
+  serviceId: string,
+): Promise<LiveStatus | null> {
+  const entry = await kv.get<LiveStatus>(["live", serviceId]);
+  return entry.value ?? null;
+}
+
 /**
  * Record a single check result. Atomically increments daily counters.
  * KV key structure: ["checks", serviceId, "YYYY-MM-DD", "total" | "ok"]

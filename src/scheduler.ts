@@ -1,7 +1,7 @@
 // src/scheduler.ts
 import { CHECK_INTERVAL_MS, services } from "./config.ts";
 import { checkService } from "./checker.ts";
-import { recordCheck } from "./store.ts";
+import { recordCheck, recordLive } from "./store.ts";
 
 function todayString(): string {
   return new Date().toISOString().slice(0, 10);
@@ -17,6 +17,7 @@ export async function runChecks(kv: Deno.Kv): Promise<void> {
   for (const result of results) {
     if (result.status === "fulfilled") {
       await recordCheck(kv, result.value, day);
+      await recordLive(kv, result.value);
       const icon = result.value.ok ? "UP" : "DOWN";
       console.log(
         `[${icon}] ${result.value.serviceId} — ${result.value.latencyMs}ms`,
