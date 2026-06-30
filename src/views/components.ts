@@ -1,9 +1,10 @@
 // src/views/components.ts
 import { html, raw } from "hono/html";
 import type { HtmlEscapedString } from "hono/utils/html";
-import type { DayStats } from "../store.ts";
+import type { DayStats, LiveStatus } from "../store.ts";
+import type { ServiceData } from "./status-page.ts";
 
-/** Determine CSS class for a single day bar */
+/** Determine CSS class for a single history-day bar */
 export function barColor(uptimePercent: number): string {
   if (uptimePercent === 0) return "bar-nodata";
   if (uptimePercent >= 99) return "bar-up";
@@ -11,17 +12,29 @@ export function barColor(uptimePercent: number): string {
   return "bar-down";
 }
 
-/** Determine CSS class for the uptime badge */
-export function uptimeBadgeClass(uptimePercent: number): string {
-  if (uptimePercent >= 99) return "badge-up";
-  if (uptimePercent >= 90) return "badge-degraded";
-  return "badge-down";
+/** Current up/down state for a service, from its latest check. */
+type LiveState = "up" | "down" | "nodata";
+function liveState(live: LiveStatus | null): LiveState {
+  if (!live) return "nodata";
+  return live.ok ? "up" : "down";
 }
+
+const STATE_WORD: Record<LiveState, string> = {
+  up: "Online",
+  down: "Offline",
+  nodata: "Awaiting first check",
+};
 
 /** Format a date string nicely: "2026-04-02" → "Apr 2" */
 function shortDate(day: string): string {
   const d = new Date(day + "T00:00:00");
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+/** Join names into readable prose: ["A","B","C"] → "A, B and C" */
+function joinNames(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? "";
+  return names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
 }
 
 /** Render the 90-day bar strip for a service */
@@ -47,96 +60,107 @@ export function barStrip(
   `;
 }
 
-/** Render a single service row */
-export function serviceRow(
-  name: string,
-  history: DayStats[],
-  overallUptime: number,
+/** The static masthead — title block at the top of the page. */
+export function masthead(): HtmlEscapedString | Promise<HtmlEscapedString> {
+  return html`
+    <header class="masthead">
+      <div class="kicker">The Perihelion</div>
+      <h1>Status Almanac</h1>
+      <div class="dateline">
+        Homelab dispatches, measured with questionable rigor
+      </div>
+    </header>
+  `;
+}
+
+/** The "right now" verdict, written as a sentence from current service state. */
+function lede(
+  servicesData: ServiceData[],
 ): HtmlEscapedString | Promise<HtmlEscapedString> {
-  const badgeCls = overallUptime === 0
-    ? "badge-nodata"
-    : uptimeBadgeClass(overallUptime);
-  const badgeText = overallUptime === 0
-    ? "No data"
-    : `${overallUptime.toFixed(3)}%`;
+  const total = servicesData.length;
+  const up = servicesData.filter((s) => s.live?.ok).length;
+  const troubled = servicesData
+    .filter((s) => !s.live?.ok)
+    .map((s) => s.config.name);
+  const allUp = up === total;
+
+  const markText = allUp ? "Reporting live" : "Reporting an issue";
+  const sentence = allUp
+    ? html`Everything is online. Quiet on the homelab front.`
+    : html`${up} of ${total} are humming along, but
+        <em>${joinNames(troubled)}</em>
+        ${troubled.length > 1 ? "are" : "is"} having a moment.`;
 
   return html`
-    <div class="service-row">
-      <div class="service-header">
-        <span class="service-name">${name}</span>
-        <span class="badge ${badgeCls}">${badgeText}</span>
-      </div>
-      ${barStrip(history)}
-      <div class="bar-labels">
-        <span>${history[0]?.day ?? ""}</span>
-        <span>Today</span>
-      </div>
+    <div class="lede ${allUp ? "" : "warn"}">
+      <span class="mark"><span class="dot"></span>${markText}</span>
+      <p>${sentence}</p>
     </div>
   `;
 }
 
-/** Pick a fun status message and class based on uptime */
-function statusInfo(uptimePercent: number): {
-  text: string;
-  cls: string;
-} {
-  if (uptimePercent >= 99) {
-    return { text: "All Systems Operational", cls: "status-up" };
-  }
-  if (uptimePercent >= 90) {
-    return { text: "Mostly Operational, Mostly", cls: "status-degraded" };
-  }
-  if (uptimePercent > 0) {
-    return { text: "This Is Fine", cls: "status-down" };
-  }
-  return { text: "Waiting for Data...", cls: "status-nodata" };
+/** The quiet "field notes" stats: historical averages, demoted below the verdict. */
+function fieldNotes(
+  globalUptime: number,
+  ninesDisplay: string,
+): HtmlEscapedString | Promise<HtmlEscapedString> {
+  const uptimeText = globalUptime > 0
+    ? `${globalUptime.toFixed(2)}%`
+    : "—";
+  return html`
+    <div class="notes">
+      <div class="n"><b>${uptimeText}</b>uptime, 90 days</div>
+      <div class="n"><b>${ninesDisplay}</b>nines earned</div>
+      <div class="n"><b>60s</b>between checks</div>
+    </div>
+  `;
 }
 
-/** Render the page header with overall uptime */
-export function pageHeader(
-  uptimePercent: number,
-  ninesCount: number,
-  ninesGrade: string,
+/** Render a single service as an almanac index entry. */
+function entry(
+  s: ServiceData,
 ): HtmlEscapedString | Promise<HtmlEscapedString> {
-  const { text: statusText, cls: statusCls } = statusInfo(uptimePercent);
-  const ninesDisplay = isFinite(ninesCount)
-    ? (Math.floor(ninesCount * 10) / 10).toFixed(1)
-    : "> 9000";
-  const uptimeDisplay = uptimePercent > 0
-    ? `${uptimePercent.toFixed(4)}%`
-    : "\u2014";
+  const state = liveState(s.live);
+  const uptimeText = s.uptime > 0 ? `${s.uptime.toFixed(2)}% up` : "no data yet";
+  const detail = state === "up" && s.live
+    ? `${s.live.latencyMs} ms · ${uptimeText}`
+    : state === "down"
+    ? `offline · ${uptimeText}`
+    : "awaiting first check";
 
+  const firstDay = s.history[0]?.day;
   return html`
-    <header class="page-header">
-      <div class="header-bg">
-        <div class="header-content">
-          <h1 class="site-title">Perihelion Status</h1>
-          <p class="subtitle">homelab uptime, measured with questionable rigor</p>
-
-          <div class="hero-stats">
-            <div class="stat-block nines-block">
-              <span class="stat-value">${ninesDisplay}</span>
-              <span class="stat-label">nines</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-block">
-              <span class="stat-value stat-uptime">${uptimeDisplay}</span>
-              <span class="stat-label">uptime</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-block">
-              <span class="stat-value stat-grade">${ninesGrade ||
-                "\u2014"}</span>
-              <span class="stat-label">grade</span>
-            </div>
-          </div>
-
-          <div class="overall-status ${statusCls}">
-            <span class="status-dot"></span>
-            <span>${statusText}</span>
-          </div>
-        </div>
+    <article class="entry">
+      <div class="top">
+        <span class="status ${state}"></span>
+        <span class="nm">${s.config.name}</span>
+        <span class="now ${state}">· ${STATE_WORD[state]}</span>
+        <span class="dots">${detail}</span>
       </div>
-    </header>
+      ${barStrip(s.history)}
+      <div class="scale">
+        <span>${firstDay ? shortDate(firstDay) : ""}</span>
+        <span>Today</span>
+      </div>
+    </article>
+  `;
+}
+
+/**
+ * The live region: verdict + field notes + the service index.
+ * Re-rendered on the htmx poll so the "right now" status stays current.
+ */
+export function liveRegion(
+  servicesData: ServiceData[],
+  globalUptime: number,
+  ninesDisplay: string,
+): HtmlEscapedString | Promise<HtmlEscapedString> {
+  return html`
+    ${lede(servicesData)}
+    ${fieldNotes(globalUptime, ninesDisplay)}
+    <section class="index">
+      <h2>The Services, in order of appearance</h2>
+      ${servicesData.map((s) => entry(s))}
+    </section>
   `;
 }

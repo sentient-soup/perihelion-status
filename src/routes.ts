@@ -1,7 +1,11 @@
 // src/routes.ts
 import { Hono } from "hono";
 import { services } from "./config.ts";
-import { computeOverallUptime, getServiceHistory } from "./store.ts";
+import {
+  computeOverallUptime,
+  getLiveStatus,
+  getServiceHistory,
+} from "./store.ts";
 import { servicesPartial, statusPage } from "./views/status-page.ts";
 import type { ServiceData } from "./views/status-page.ts";
 
@@ -14,9 +18,12 @@ export function createApp(kv: Deno.Kv): Hono {
     const result: ServiceData[] = [];
 
     for (const svc of services) {
-      const history = await getServiceHistory(kv, svc.id, now);
+      const [history, live] = await Promise.all([
+        getServiceHistory(kv, svc.id, now),
+        getLiveStatus(kv, svc.id),
+      ]);
       const uptime = computeOverallUptime(history);
-      result.push({ config: svc, history, uptime });
+      result.push({ config: svc, history, uptime, live });
     }
 
     return result;
