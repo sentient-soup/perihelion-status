@@ -60,15 +60,28 @@ export function barStrip(
   `;
 }
 
-/** The static masthead — title block at the top of the page. */
-export function masthead(): HtmlEscapedString | Promise<HtmlEscapedString> {
+const NAV = [
+  ["start", "/start", "Start"],
+  ["status", "/", "Status"],
+] as const;
+export type Page = typeof NAV[number][0];
+
+/** The masthead — title block + site nav at the top of every page. */
+export function masthead(
+  title = "Service Availability",
+  dateline = "Homelab service monitoring",
+  current: Page = "status",
+): HtmlEscapedString | Promise<HtmlEscapedString> {
   return html`
     <header class="masthead">
       <div class="kicker">Perihelion</div>
-      <h1>System Status</h1>
-      <div class="dateline">
-        Homelab service monitoring
-      </div>
+      <h1>${title}</h1>
+      <div class="dateline">${dateline}</div>
+      <nav class="sitenav">
+        ${NAV.map(([id, href, label]) =>
+          html`<a href="${href}"${raw(id === current ? ' aria-current="page"' : "")}>${label}</a>`
+        )}
+      </nav>
     </header>
   `;
 }

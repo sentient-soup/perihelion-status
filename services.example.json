@@ -5,6 +5,11 @@
     "url": "http://myserver:8080/health"
   },
   {
+    "id": "jellyseerr",
+    "name": "Requests",
+    "url": "https://request.perihelion.live/api/v1/status"
+  },
+  {
     "id": "my-api",
     "name": "My API",
     "url": "http://myserver:3000/healthcheck",

@@ -27,7 +27,7 @@ export function statusPage(
   );
 
   return layout(
-    "Perihelion Status",
+    "Service Availability · Perihelion",
     html`
       <div class="sheet">
         ${masthead()}
