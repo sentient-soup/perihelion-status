@@ -53,8 +53,9 @@ function discordBox(): H {
       <img src="${discord.icon}" alt="" width="56" height="56" />
       <span>
         <b>Get help on Discord</b>
-        <span>You've already been added to the Perihelion server. Post what you
-        were doing and a screenshot.</span>
+        <span>You've already been added to the Perihelion server.</span>
+        <span><b>#help</b> for general questions. <b>#survey</b> to report a
+        problem with a title.</span>
       </span>
     </a>
   `;
@@ -105,6 +106,20 @@ export function startPage(items: DirectoryItem[]): H {
             <details><summary>Video keeps stopping</summary><ul>
               <li>Lower the quality in the player settings, or try another device.</li>
             </ul></details>
+            <details><summary>Issues with media</summary><div class="exp">
+              <p>Found something weird or broken with a title? Such as:</p>
+              <ul>
+                <li>Missing or wrong subtitles</li>
+                <li>Skipping playback</li>
+                <li>Wrong title or poster</li>
+                <li>Duplicate listings</li>
+                <li>Missing episodes</li>
+                <li>Playback stops at the same point every time</li>
+              </ul>
+              <p>Fixing all the current issues will take time, but reported issues go to the front of the
+              line. Post in <b>#survey</b> on Discord (below) with the title,
+              the episode if it's a show, and what's wrong.</p>
+            </div></details>
             <details><summary>Can't find a title</summary><ul>
               <li>Request it at <a href="https://request.perihelion.live">request.perihelion.live</a>.</li>
             </ul></details>
