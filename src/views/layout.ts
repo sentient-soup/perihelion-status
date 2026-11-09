@@ -2,6 +2,15 @@
 import { html } from "hono/html";
 import type { HtmlEscapedString } from "hono/utils/html";
 
+// Cache-bust the stylesheet: Cloudflare caches /static/* at the edge, so a new
+// deploy would otherwise serve old CSS for hours. The hash changes only when the file does.
+const cssHash = Array.from(
+  new Uint8Array(
+    await crypto.subtle.digest("SHA-256", await Deno.readFile("./static/style.css")),
+  ).slice(0, 4),
+  (b) => b.toString(16).padStart(2, "0"),
+).join("");
+
 export function layout(
   title: string,
   body: HtmlEscapedString | Promise<HtmlEscapedString>,
@@ -23,7 +32,7 @@ export function layout(
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        <link rel="stylesheet" href="/static/style.css" />
+        <link rel="stylesheet" href="/static/style.css?v=${cssHash}" />
         <script src="https://unpkg.com/htmx.org@2.0.4"></script>
       </head>
       <body>
